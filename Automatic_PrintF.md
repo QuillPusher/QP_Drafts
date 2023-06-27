@@ -23,7 +23,7 @@ clang-repl> "Hello, interactive C++!"
 (const char [24]) "Hello, interactive C++!"
 ```
 
-##### Annotation Token (annot_replinput_end)
+### Significance of this feature
 Inspired by a similar implementation in Cling, this feature added to upstream 
 Clang repo has essentially extended the syntax of C++, so that it can be 
 more hepful for people that are writing code for data science appllications.
@@ -34,5 +34,6 @@ This is similar to how Python works (hence its popularity in data science
 research), but the superior performance of C++, along with this flexibility 
 makes it a more attractive option.
 
+#### Annotation Token (annot_replinput_end)
 
 
