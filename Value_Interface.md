@@ -37,7 +37,7 @@ Value V;
 V.dump();        // Perform Pretty Printing or return the value to the user
 ```
 
-#### Applications of this Feature
+#### Significance of this Feature
 
 The 'Value' object enables wrapping a memory region that comes from the 
 JIT, and bringing it back to the compiled code (and vice versa). 
