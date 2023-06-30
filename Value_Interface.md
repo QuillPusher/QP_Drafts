@@ -9,7 +9,32 @@ passed using `ValueGetter()`, then saved in an object of type `value` using
 right side of the illustration shows how this value object can be used within 
 the interpreter.
 
-#### Capture Execution Results in an object of type 'Value'
+#### How to Capture Execution Results
+
+```mermaid
+graph TD
+subgraph  
+A("<b>ValueGetter()</b>"</br>Interface to pass</br>VALUE object) --> B(Set Value)
+subgraph CaptureMechanism
+B --> C{New Memory </br> Allocation?}
+C -->|Yes| D("<b>SetValueWithAlloc()</b>")
+D --> E("<b>1. RValue Structure</b></br>(a temporary value)")
+C -->|No| F("<b>SetValueWithAlloc()</b>")
+F --> G("<b>2. LValue Structure</b></br>(a variable with an address)")
+F --> H("<b>3. Built-In Type</b></br>(int, float, etc.)")
+end
+subgraph Using captured 'Value' object in Interpreter
+  I("Get <b>Function Pointer</b> to </br><b>ValueGetter()</b>")
+  I --> J(Create an Object of type </br>'Value')
+  J --> K("<b>Assign Value</b> to the <br>Object of type 'Value'</br>(based on respective </br>Memory Allocation scenario")
+  K --> L(<b>Pretty Print</b> the Value Object)
+end
+end
+CaptureMechanism --> K
+```
+
+#### Separate Graphs
+##### Capture Execution Results in 'Value' Object
 
 ```mermaid
 graph TD
@@ -22,7 +47,7 @@ graph TD
       F --> H("<b>3. Built-In Type</b></br>(int, float, etc.)")
 ```
 
-#### Using captured 'Value' object in Interpreter
+##### Using captured 'Value' object in Interpreter
 
 ```mermaid
 graph TD
