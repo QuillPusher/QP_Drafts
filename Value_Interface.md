@@ -9,6 +9,32 @@ passed using `ValueGetter()`, then saved in an object of type `value` using
 right side of the illustration shows how this value object can be used within 
 the interpreter.
 
+#### Capture Execution Results in an object of type 'Value'
+
+```mermaid
+graph TD
+  A("<b>ValueGetter()</b>"</br>Interface to pass</br>VALUE object) --> B(Set Value)
+      B --> C{New Memory </br> Allocation?}
+      C -->|Yes| D("<b>SetValueWithAlloc()</b>") 
+      D --> E("<b>1. RValue Structure</b></br>(a temporary value)")
+      C -->|No| F("<b>SetValueWithAlloc()</b>") 
+      F --> G("<b>2. LValue Structure</b></br>(a variable with an address)")
+      F --> H("<b>3. Built-In Type</b></br>(int, float, etc.)")
+```
+
+#### Using captured 'Value' object in Interpreter
+
+```mermaid
+graph TD
+  A("Get <b>Function Pointer</b> to <b>ValueGetter()</b>")
+  A --> B(Create an Object of type 'Value')
+  B --> C("<b>Assign Value to the Object</b></br>(based on Memory Allocation scenarios</br>shown in previous illustration")
+  C --> D(<b>Pretty Print</b> the Value Object)
+```
+
+
+
+
 ![Capture Execution Results](https://github.com/QuillPusher/drafts/blob/main/img_ExecResults.png)
 
 Following is a simplified example of how the `ValueGetter()` function handles 
