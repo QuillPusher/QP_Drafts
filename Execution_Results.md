@@ -26,9 +26,8 @@ interpreter during interactive programming.
 
 ### Getting to know the developer
 
-Jun started working with Compiler Research Organization in May 2022 as a 
-Google Summer of Code student, working on the Clang/LLVM infrastructure, 
-contributing approximately 70 patches. More details here: 
+Jun is a software engineering undergraduate student. Working on the Clang/LLVM 
+infrastructure, he has contributed ~70 patches. More details here: 
 
 [Jun Zhang's Profile](JunProfile.md)
 
