@@ -6,9 +6,23 @@ interpreter during interactive programming.
 
 #### How it works
 
+```mermaid
+flowchart TD
+    A["ParseAndExecute()</br>in Clang"] -->|Optional 'Value' Parameter| B{Capture 'Value' parameter</br>for processing?}
+    B -->|Yes| D[Use for processing] --> DE(End)
+    B -->|No| E["Validate and push to dump()"]
+    E --> F["call print() function"]
+    F --> G["Print the Type</br>ReplPrintTypeImpl()"]
+    F --> H["Print the Data</br>ReplPrintDataImpl()"]
+    G --> I["Output <b>Pretty Print</b> to the user"]
+    H --> I["Output <b>Pretty Print</b> to the user"]
+```
+
+#### Parsing mechanism
+
 The Interpreter in Clang-REPL (`interpreter.cpp`) includes the function 
 `ParseAndExecute()` that can accept a 'Value' parameter to capture the result. 
-But if the value parameter is made optional and it is ommitted (i.e., that the 
+But if the value parameter is made optional and it is omitted (i.e., that the 
 user does not want to utilize it elsewhere), then the last value can be 
 validated and pushed into the `dump()` function. 
 
