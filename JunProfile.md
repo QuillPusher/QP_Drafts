@@ -1,8 +1,7 @@
 ### Getting to know Jun Zhang
-Jun is a 3rd year undergraduate student, majoring in Software Engineering. He 
-started working with Compiler Research Organization in May 2022 as a Google 
-Summer of Code student, working on the Clang/LLVM infrastructure, contributing 
-approximately 70 patches. 
+Jun is a software engineering undergraduate student. He was originally 
+introduced to the Compiler Research team through Google Summer of Code. Since 
+then, working on the Clang/LLVM infrastructure, he has contributed ~70 patches.
 
 ### Technical debt alleviation
 
