@@ -46,16 +46,39 @@ makes it a more attractive option.
 
 #### Annotation Token (annot_repl_input_end)
 This feature uses a new token (annot_repl_input_end) to consider printing the 
-value of an expression if it doesn't end with a semicolon. A semicolon is 
-normally required in C++, but this feature expands the C++ syntax to handle 
-cases where a missing semicolon is expected (i.e., when handling an expression 
-statement). It also makes sure that an error is not generated for the missing 
-semicolon in this specific case. 
+value of an expression if it doesn't end with a semicolon. When parsing an 
+Expression Statement, if the last semicolon is missing, then the code will 
+pretend that there one and set a merker there for later utilization.
+
+A semicolon is normally required in C++, but this feature expands the C++ 
+syntax to handle cases where a missing semicolon is expected (i.e., when 
+handling an expression statement). It also makes sure that an error is not 
+generated for the missing semicolon in this specific case. 
 
 This is accomplished by identifying the end position of the user input 
 (expression statement). This helps store and return the expression statement 
-effectively, so that if can be printed (displayed to the user automatically).
+effectively, so that it can be printed (displayed to the user automatically).
 
 > Note that this logic is only available for C++ for now, since part of the 
 implementation itself requires C++ features. Future versions may support more 
-languages over time.
+languages.
+
+```
+  Token *CurTok = nullptr;
+  // If the semicolon is missing at the end of REPL input, consider if
+  // we want to do value printing. Note this is only enabled in C++ mode
+  // since part of the implementation requires C++ language features.
+  // Note we shouldn't eat the token since the callback needs it.
+  if (Tok.is(tok::annot_repl_input_end) && Actions.getLangOpts().CPlusPlus)
+    CurTok = &Tok;
+  else
+    // Otherwise, eat the semicolon.
+    ExpectAndConsumeSemi(diag::err_expected_semi_after_expr);
+
+  StmtResult R = handleExprStmt(Expr, StmtCtx);
+  if (CurTok && !R.isInvalid())
+    CurTok->setAnnotationValue(R.get());
+
+  return R;
+}
+```
