@@ -48,7 +48,8 @@ makes it a more attractive option.
 This feature uses a new token (annot_repl_input_end) to consider printing the 
 value of an expression if it doesn't end with a semicolon. When parsing an 
 Expression Statement, if the last semicolon is missing, then the code will 
-pretend that there one and set a merker there for later utilization.
+pretend that there one and set a marker there for later utilization, and 
+continue parsing.
 
 A semicolon is normally required in C++, but this feature expands the C++ 
 syntax to handle cases where a missing semicolon is expected (i.e., when 
