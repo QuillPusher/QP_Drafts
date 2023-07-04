@@ -57,31 +57,6 @@ The idea behind synthesizing different function calls for different types of
 'x' is to be able to preserve the semantics of each type (built-in, object, 
 array, etc.) and store the values accordingly.
 
-##### Improving Efficiency and User Experience
-
-The Value object is essentially used to create a mapping between an expression 
-'type' and the 'memory' to be allocated. Built-in types (bool, char, int, 
-float, double, etc.) are simpler, since their memory allocation size is known. 
-In case of objects, the pointer can be saved, since the size of the object is 
-not known.
-
-For further improvement, the underlying Clang Type is also identified. For 
-example, `X(char, Char_S)`, where `Char_S` is the Clang type. Clang types are 
-very efficient, which is important since these will be used in hotspots (high 
-utilization areas of a program). The `Value.h` header file has a very low token
- count and was developed with strict constraints in mind, since it can affect 
-the performance of the interpreter.
-
-This also enables the user to receive the computed 'type' back in their code 
-and then transform the type into something else (e.g., transform a double into 
-a float). Normally, the compiler can handle these conversions transparently, 
-but in interpreter mode, the compiler cannot see all the 'from' and 'to' types,
- so it cannot implicitly do the conversions. So this logic enables providing 
-these conversions on request. 
-
-On-request conversions can also help improve the user experince, by allowing 
-conversion to a desired 'to' type, when the 'from' type is unknown or unclear
-
 #### Return Value Object
 While interacting with the interpreter, the following code gets a function 
 pointer to `ValueGetter()` from JIT, to help return the object 'V' of type 
@@ -93,6 +68,31 @@ Value V;
 (*F)((void*)&V);
 V.dump();        // Perform Pretty Printing or return the value to the user
 ```
+
+##### Improving Efficiency and User Experience
+
+The Value object is essentially used to create a mapping between an expression 
+'type' and the 'memory' to be allocated. Built-in types (bool, char, int, 
+float, double, etc.) are simpler, since their memory allocation size is known. 
+In case of objects, a pointer can be saved, since the size of the object is 
+not known.
+
+For further improvement, the underlying Clang Type is also identified. For 
+example, `X(char, Char_S)`, where `Char_S` is the Clang type. Clang types are 
+very efficient, which is important since these will be used in hotspots (high 
+utilization areas of the program). The `Value.h` header file has a very low 
+token count and was developed with strict constraints in mind, since it can 
+affect the performance of the interpreter.
+
+This also enables the user to receive the computed 'type' back in their code 
+and then transform the type into something else (e.g., transform a double into 
+a float). Normally, the compiler can handle these conversions transparently, 
+but in interpreter mode, the compiler cannot see all the 'from' and 'to' types,
+ so it cannot implicitly do the conversions. So this logic enables providing 
+these conversions on request. 
+
+On-request conversions can help improve the user experince, by allowing 
+conversion to a desired 'to' type, when the 'from' type is unknown or unclear
 
 #### Significance of this Feature
 
