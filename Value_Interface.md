@@ -109,3 +109,28 @@ and Python.
 
 In a nutshell, this feature enables a new way of developing code, paving the 
 way for language interoperability and easier interactive programming.
+
+#### Communication between Compiled Code and Interpreted Code
+
+In Clang-REPL there is **interpreted code**, and this feature adds a 'value' 
+runtime that can talk to the **compiled code**.
+
+Following is an example where the compiled code interacts with the interpreter 
+code. The execution results of an expression are stored in the object 'V' of 
+type Value. This value is then printed, effectively helping the interpreter 
+use a value from the compiled code.
+
+```
+int Global = 42;
+void setGlobal(int val) { Global = val; }
+int getGlobal() { return Global; }
+Interp.ParseAndExecute(“void setGlobal(int val);”);
+Interp.ParseAndExecute(“int getGlobal();”);
+Value V;
+Interp.ParseAndExecute(“getGlobal()”, &V);
+std::cout << V.getAs<int>() << “\n”; // Prints 42
+```
+
+> Above is an example of interoperability between the compiled code and the 
+interpreted code. Interoperability between languages (e.g., C++ and Python) 
+works similarly.
