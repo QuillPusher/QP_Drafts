@@ -74,7 +74,7 @@ void Value::print(llvm::raw_ostream &Out) const {
 Printing the Data and Type are handled in their respective functions: 
 `ReplPrintDataImpl()` and `ReplPrintTypeImpl()`
 
-#### Supported Types
+#### Complex Data Types
 
 This feature can print out primitive types (int, char, bool, etc.) easily. 
 For more complex types (e.g., `std::vector`), it falls back to a runtime 
@@ -99,3 +99,17 @@ functions that can be called to handle complex types (e.g., STL components).
 
 > This header is only included on-demand, where needed, since it is an 
 expensive runtime operation.
+
+##### Users can create their own types
+
+All overloads live in a header, which are included at runtime. So "print a 
+std::vector" is equivalent to `PrintValueRuntime(&v);`.
+
+This means users can write their own overload for their types:
+
+```
+clang-repl> struct S{};
+clang-repl> std::string PrintValueRuntime(const S* s) { return “My printer!”; }
+clang-repl> S{}
+(S) “My Printer!” 
+```
