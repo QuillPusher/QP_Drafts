@@ -6,6 +6,16 @@ This is achieved using an extension in the `libclangInterpreter` library.
 To automatically print the value of an expression, simply write the expression 
 in the global scope **without a semicolon**.
 
+```mermaid
+flowchart TD
+    A["Manual PrintF"]
+    A --> |"int x = 42; </br> printf(&quot;(int &) %d #92;n&quot;, x);"| B["int( &) 42"]
+    D[Automatic PrintF]
+    D--> |"int x = 42; </br> x"| E["int( &) 42"]
+```    
+
+#### JPG graphic
+
 ![Automatic PrintF](https://github.com/QuillPusher/drafts/blob/main/img_PrintF.png)
 
 Following are some examples:
