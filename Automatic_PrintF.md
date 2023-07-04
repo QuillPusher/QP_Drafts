@@ -83,3 +83,22 @@ languages.
   return R;
 }
 ```
+
+##### AST Transformation
+
+When Sema encounters the `annot_repl_input_end` token, it knows to transform 
+the AST before the real CodeGen process. It will consume the token and set a 
+'semi missing' bit in the respective decl.
+
+```
+  if (Tok.is(tok::annot_repl_input_end) &&
+      Tok.getAnnotationValue() != nullptr) {
+    ConsumeAnnotationToken();
+    cast<TopLevelStmtDecl>(DeclsInGroup.back())->setSemiMissing();
+  }
+```
+
+In the AST Consumer, traverse all Decls in the Decl reference, and if the 
+current decl is the Top Level Decl and has a semicolon missing, then ask the 
+synthesizer to synthesize another expression and replace this original 
+expression.
