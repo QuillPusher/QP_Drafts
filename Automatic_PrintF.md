@@ -14,9 +14,7 @@ flowchart TD
     D--> |"int x = 42; </br> x"| E["int( &) 42"]
 ```    
 
-#### JPG graphic
-
-![Automatic PrintF](https://github.com/QuillPusher/drafts/blob/main/img_PrintF.png)
+#### Examples
 
 Following are some examples:
 
