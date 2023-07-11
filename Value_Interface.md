@@ -26,16 +26,12 @@ end
 subgraph Using captured 'Value' object in Interpreter
   I("Get <b>Function Pointer</b> to </br><b>ValueGetter()</b>")
   I --> J(Create an Object of type </br>'Value')
-  J --> K("<b>Assign Value</b> to the <br>Object of type 'Value'</br>(based on respective </br>Memory Allocation scenario")
+  J --> K("<b>Assign Value</b> to the <br>Object of type 'Value'</br>(based on respective </br>Memory Allocation scenario)")
   K --> L(<b>Pretty Print</b> the Value Object)
 end
 end
 CaptureMechanism --> K
 ```
-
-##### JPG Sample Image
-
-![Capture Execution Results](https://github.com/QuillPusher/drafts/blob/main/img_ExecResults.png)
 
 #### Supported scenarios
 Following are simplified examples of how the `ValueGetter()` function handles 
