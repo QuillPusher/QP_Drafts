@@ -96,7 +96,4 @@ the AST before the real CodeGen process. It will consume the token and set a
   }
 ```
 
-In the AST Consumer, traverse all Decls in the Decl reference, and if the 
-current decl is the Top Level Decl and has a semicolon missing, then ask the 
-synthesizer to synthesize another expression and replace this original 
-expression.
+In the AST Consumer, traverse all the Top Level Decls, to look for expressions to synthesize. If the current Decl is the Top Level Statement Decl(`TopLevelStmtDecl`) and has a semicolon missing, then ask the interpreter to synthesize another expression (an internal function call) to replace this original expression.

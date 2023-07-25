@@ -1,21 +1,45 @@
+## Value Synthesis
+
 ### Passing Execution Results to a 'Value' object
 
 In many cases, it is useful to bring back the program execution result to the 
 compiled program. This result can be stored in an object of type 'Value'. 
 
-The left side in the following illustration shows how an execution result is 
-passed using `ValueGetter()`, then saved in an object of type `value` using 
-`SetValueWithAlloc()` or `SetValueNoAlloc()`, depending on the identified 
-scenario. The right side of the illustration shows how this value object can be
- used within the interpreter.
+### Incremental AST Consumer
 
-#### How to Capture Execution Results
+The `IncrementalASTConsumer` class wraps the original code generator 
+`ASTConsumer` and it performs a hook, to traverse all the top-level decls, to 
+look for expressions to synthesize, based on the `isSemiMissing()` condition.
+
+If this condition is found to be true, then `Interp.SynthesizeExpr()` will be 
+invoked. 
+
+```
+    for (Decl *D : DGR)
+      if (auto *TSD = llvm::dyn_cast<TopLevelStmtDecl>(D);
+          TSD && TSD->isSemiMissing())
+        TSD->setStmt(Interp.SynthesizeExpr(cast<Expr>(TSD->getStmt())));
+
+    return Consumer->HandleTopLevelDecl(DGR);
+```
+
+The synthesizer will then choose the relevant expression, based on its type.
+
+#### How Execution Results are captured
+
+The synthesizer chooses which expression to synthesize, and then it replaces 
+the original expression with the synthesized expression. Depending on the 
+expression type, it may choose to save an object (`LastValue`) of type 'value'
+ while allocating memory to it (`SetValueWithAlloc()`), or not (
+`SetValueNoAlloc()`).
 
 ```mermaid
 graph TD
-subgraph  
-A("<b>ValueGetter()</b>"</br>Interface to pass</br>VALUE object) --> B(Set Value)
-subgraph CaptureMechanism
+  J(Create an Object <b>'Last Value'</b></br>of type 'Value')
+  J --> K("<b>Assign the result to the 'LastValue'</b></br>(based on respective </br>Memory Allocation scenario)")
+  K --> L(<b>Pretty Print</b> the Value Object)
+subgraph SynthesizeExpression
+B("<b>SynthesizeExpr()</b>")
 B --> C{New Memory </br> Allocation?}
 C -->|Yes| D("<b>SetValueWithAlloc()</b>")
 D --> E("<b>1. RValue Structure</b></br>(a temporary value)")
@@ -23,47 +47,33 @@ C -->|No| F("<b>SetValueWithAlloc()</b>")
 F --> G("<b>2. LValue Structure</b></br>(a variable with an address)")
 F --> H("<b>3. Built-In Type</b></br>(int, float, etc.)")
 end
-subgraph Using captured 'Value' object in Interpreter
-  I("Get <b>Function Pointer</b> to </br><b>ValueGetter()</b>")
-  I --> J(Create an Object of type </br>'Value')
-  J --> K("<b>Assign Value</b> to the <br>Object of type 'Value'</br>(based on respective </br>Memory Allocation scenario)")
-  K --> L(<b>Pretty Print</b> the Value Object)
-end
-end
-CaptureMechanism --> K
+SynthesizeExpression --> K
 ```
 
-#### Supported scenarios
-Following are simplified examples of how the `ValueGetter()` function handles 
-different scenarios for assigning an opaque (of unknown type) value to a 
-variable (also see the decision box in preceding illustration).
+### Where is the captured result stored?
+
+`LastValue` holds the last result of the value printing. It is a class member 
+because it can be accessed even after subsequent inputs. 
+
+> If no value printing happens, then it is in an invalid state. 
+
+### Interpreter as a REPL vs. as a Library
+
+1 - If we're using the interpreter in interactive (REPL) mode, it will dump 
+the value (i.e., value printing).
 
 ```
-clang-repl> void ValueGetter(void* OpaqueValue) {
-
-SetValueNoAlloc(OpaqueValue, xQualType, x);           // 1. if x is a built-in type like int, float, etc.
-
-SetValueNoAlloc(OpaqueValue, xQualType, &x);          // 2. if x is a struct, and a lvalue
-
-new (SetValueWithAlloc(OpaqueValue, xQualType) (x);   // 3. if x is a struct, but a rvalue
-
-}
+  if (LastValue.isValid()) {
+    if (!V) {
+      LastValue.dump();
+      LastValue.clear();
+    } else
+      *V = std::move(LastValue);
+  }
 ```
-The idea behind synthesizing different function calls for different types of 
-'x' is to be able to preserve the semantics of each type (built-in, object, 
-array, etc.) and store the values accordingly.
 
-#### Return Value Object
-While interacting with the interpreter, the following code gets a function 
-pointer to `ValueGetter()` from JIT, to help return the object 'V' of type 
-'Value'.
-
-```
-auto* F = (void(*)(void*))Interp.getSymbolAddr("ValueGetter");
-Value V;
-(*F)((void*)&V);
-V.dump();        // Perform Pretty Printing or return the value to the user
-```
+2 - If we're using the interpreter as a library, then it will pass the value 
+to the user.
 
 ##### Improving Efficiency and User Experience
 
@@ -87,7 +97,7 @@ but in interpreter mode, the compiler cannot see all the 'from' and 'to' types,
  so it cannot implicitly do the conversions. So this logic enables providing 
 these conversions on request. 
 
-On-request conversions can help improve the user experince, by allowing 
+On-request conversions can help improve the user experience, by allowing 
 conversion to a desired 'to' type, when the 'from' type is unknown or unclear
 
 #### Significance of this Feature
