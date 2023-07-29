@@ -19,22 +19,23 @@ flowchart TD
 
 More Details: [Click here to view Automatic PrintF Feature details](Automatic_PrintF.md)
 
-#### 2. 'Value' Interface
+#### 2. 'Value' Synthesis
 
 In many cases, it is useful to bring back the program execution result to the 
-compiled program. This result can be stored in an object of type 'Value' and 
-stored to be further processed or to be displayed to the user.
+compiled program. This result can be stored in the object `LastValue` of type 
+`Value`, to be further processed or to be displayed to the user.
 
-The `ValueGetter()` function handles different scenarios for assigning an 	
-opaque (of unknown type) value to a variable. It includes different handling 
-mechanisms for built-in types (like int, float, etc.), LValue Structs and 
-RValue Structs.
+#### How Execution Results are captured
+
+The synthesizer chooses which expression to synthesize, and then it replaces the 
+original expression with the synthesized expression. The result is then saved in 
+the `LastValue` object, where it is accessible even after subsequent inputs.
 
 ```mermaid
 graph TD
-  I("Use <b>ValueGetter()</b></br>to capture Execution Results")
-  I --> J(Create an Object of type </br>'Value')
-  J --> K("<b>Assign Value</b> to the <br>Object of type 'Value'</br>(based on respective </br>Memory Allocation scenario)")
+  J(Create an Object </br><b>'Last Value'</b></br>of type 'Value')
+  J --> K("Assign the <b>SynthesizeExpr()</b> </br>result to <b>'LastValue'</b></br>(based on respective </br>Memory Allocation scenario)")
+  X("<b>SynthesizeExpr()</b></br>Replace original Expression</br>with a synthesized expression") --> K
   K --> L(<b>Pretty Print</b> the Value Object)
 ```
 
