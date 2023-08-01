@@ -20,13 +20,7 @@ This is achieved using an extension in the `libclangInterpreter` library.
 To automatically print the value of an expression, simply write the expression 
 in the global scope **without a semicolon**.
 
-```mermaid
-flowchart TD
-    A["Manual PrintF"]
-    A --> |"int x = 42; </br> printf(&quot;(int &) %d #92;n&quot;, x);"| B["int( &) 42"]
-    D[Automatic PrintF]
-    D--> |"int x = 42; </br> x"| E["int( &) 42"]
-```    
+![Automatic Printf](autoprint.png)
 
 #### Examples
 
@@ -113,9 +107,7 @@ the AST before the real CodeGen process. It will consume the token and set a
 In the AST Consumer, traverse all the Top Level Decls, to look for expressions to synthesize. If the current Decl is the Top Level Statement Decl(`TopLevelStmtDecl`) and has a semicolon missing, then ask the interpreter to synthesize another expression (an internal function call) to replace this original expression.
 
 
-### 2. 'Value' Synthesis
-
-## Value Synthesis
+### 2. Value Synthesis
 
 ### Passing Execution Results to a 'Value' object
 
@@ -150,22 +142,7 @@ expression type, it may choose to save an object (`LastValue`) of type 'value'
  while allocating memory to it (`SetValueWithAlloc()`), or not (
 `SetValueNoAlloc()`).
 
-```mermaid
-graph TD
-  J(Create an Object <b>'Last Value'</b></br>of type 'Value')
-  J --> K("<b>Assign the result to the 'LastValue'</b></br>(based on respective </br>Memory Allocation scenario)")
-  K --> L(<b>Pretty Print</b> the Value Object)
-subgraph SynthesizeExpression
-B("<b>SynthesizeExpr()</b>")
-B --> C{New Memory </br> Allocation?}
-C -->|Yes| D("<b>SetValueWithAlloc()</b>")
-D --> E("<b>1. RValue Structure</b></br>(a temporary value)")
-C -->|No| F("<b>SetValueWithAlloc()</b>")
-F --> G("<b>2. LValue Structure</b></br>(a variable with an address)")
-F --> H("<b>3. Built-In Type</b></br>(int, float, etc.)")
-end
-SynthesizeExpression --> K
-```
+![Value Synthesis](valuesynth.png)
 
 ### Where is the captured result stored?
 
@@ -261,25 +238,13 @@ works similarly.
 
 ### 3. Pretty Printing
 
-### Pretty Printing
-
 This feature helps create a temporary dump to display the value and type 
 (pretty print) of the desired data. This is a good way to interact with the 
 interpreter during interactive programming.
 
 #### How it works
 
-```mermaid
-flowchart TD
-    A["ParseAndExecute()</br>in Clang"] -->|Optional 'Value' Parameter| B{Capture 'Value' parameter</br>for processing?}
-    B -->|Yes| D[Use for processing] --> DE(End)
-    B -->|No| E["Validate and push to dump()"]
-    E --> F["call print() function"]
-    F --> G["Print the Type</br>ReplPrintTypeImpl()"]
-    F --> H["Print the Data</br>ReplPrintDataImpl()"]
-    G --> I["Output <b>Pretty Print</b> to the user"]
-    H --> I["Output <b>Pretty Print</b> to the user"]
-```
+![Pretty Printing](prettyprint.png)
 
 #### Parsing mechanism
 
