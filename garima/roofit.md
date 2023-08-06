@@ -55,11 +55,11 @@ experimental data.
 errors and making the code easier to maintain and debug.
 
 
-### How to add AD support in Roofit entities?
+### Source Code Transformation
 
 Automatic Differentiation can be accomplished using Clad (a C++ plugin for 
-Clang), that helps implement a technique called **Source Code Transformation 
-(SCT)**. 
+Clang), that helps implement a technique called Source Code Transformation 
+(SCT). 
 
 SCT takes the source code (that needs to be differentiated) as the input and 
 generates an output code that represents the derivative of the input. This 
@@ -71,7 +71,7 @@ implements automatic differentiation of user-defined functions by employing
 the chain rule in forward mode, coupled with Source Code Transformation and 
 AST constant fold.
 
-#### Summary of AD Support Steps
+### Steps to add AD support in Roofit entities
 
 - Locate the relevant directory
 - Review relevant classes where AD implementation logic resides:
@@ -80,13 +80,12 @@ AST constant fold.
   - RooFuncWrapper: wraps the generated C++ code in a Roofit object
 - Select a Class/ Mathematical Notation to which AD support needs to be added 
 (see `RooPoisson.cxx` example below).
-- Locate the `evaluate()` function
+- Locate and update the `evaluate()` function
 - Create a `translate()` function
 - Use Helper Functions like `EvaluateFuncs()`, `buildCall()`, `addResult()`, 
 etc. to translate existing logic into AD-supported logic. 
 
 > See appendix for a list of available Helper Functions.
-
 
 ### Locate Relevant Directory
 
