@@ -57,6 +57,20 @@ errors and making the code easier to maintain and debug.
 
 ### How to add AD support in Roofit entities?
 
+Automatic Differentiation can be accomplished using Clad (a C++ plugin for 
+Clang), that helps implement a technique called **Source Code Transformation 
+(SCT)**. 
+
+SCT takes the source code (that needs to be differentiated) as the input and 
+generates an output code that represents the derivative of the input. This 
+output code can be used instead of the input code for more efficient 
+compilation.
+
+> [Clad](https://compiler-research.org/clad/) is a C++ plugin for clang that 
+implements automatic differentiation of user-defined functions by employing 
+the chain rule in forward mode, coupled with Source Code Transformation and 
+AST constant fold.
+
 #### Summary of AD Support Steps
 
 - Locate the relevant directory
