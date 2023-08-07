@@ -1,37 +1,35 @@
 ##  How to extend the use of Automatic Differentiation in RooFit
 
-### What is Roofit?
+### What is RooFit?
 
-Roofit is a statistical data analysis tool, widely used in scientific 
+RooFit is a statistical data analysis tool, widely used in scientific 
 research, especially in the high-energy physics (HEP) field. It is an 
 extension of the ROOT framework, a C++ based data analysis framework that 
-provides tools for data storage, analysis, and visualization. Roofit  
+provides tools for data storage, analysis, and visualization. RooFit  
 provides a set of tools/classes to define probability density functions 
 (PDFs), perform maximum likelihood fits, perform statistical tests, etc.
 
 
 ### Proof of Concept: Speeding up RooFit using Automatic Differentiation
 
-One of the applications of Roofit is reducing statistical models (functions) 
+One of the applications of RooFit is reducing statistical models (functions) 
 to find a set of parameters that minimize the value of the function. This is 
-accomplished using derivatives. In ND, derivatives become a bottleneck, while
- AD is more efficient.
+accomplished using derivatives. In Numeric Differentiation (ND), derivatives 
+become a bottleneck, while Automatic Differentiation (AD) is more efficient.
 
 Following is an example performance comparison of gradient generation in 
-TFormula/TF1 class in Roofit.
+TFormula/TF1 class in RooFit.
 
 ![AD vs ND comparison](ad_performance_graph.png "ND vs. AD Benchmarks")
 
-Roofit is an extensive toolkit that depends on Numeric Differentiation (ND),
- which has its limitations. The idea is to apply Automatic Differentiation 
-(AD) to a few components of Roofit as a proof of concept and then provide a 
-template for other data scientists to expand AD application in different 
-parts of Roofit.
+RooFit is an extensive toolkit that depends on ND, which has its limitations. 
+The idea is to apply AD to a few components of RooFit as a proof of concept 
+and then provide a template for other data scientists to expand AD 
+application in different parts of RooFit.
 
-This can be accomplished by extending all Roofit classes with a Translate 
+This can be accomplished by extending all RooFit classes with a Translate 
 function, which will extract all the mathematical differentiable properties 
 out of these classes that a statistical model is comprised of.
-
 
 ### Advantages of using AD with RooFit
 
@@ -46,7 +44,7 @@ using finite differences.
 using a large number of parameters in a complex model. This prevents 
 error-prone manual efforts.
 
-- Seamless integration: AD can be seamlessly integrated in Roofit to empower 
+- Seamless integration: AD can be seamlessly integrated in RooFit to empower 
 its large userbase without any additional learning/ implementation. It would 
 allow users to create and fit models based on their specific needs and 
 experimental data.
@@ -55,7 +53,7 @@ experimental data.
 errors and making the code easier to maintain and debug.
 
 
-### Automatic Differentiation using Source Code Transformation
+### AD using Source Code Transformation
 
 AD can be accomplished using Clad [^1] (a C++ plugin for Clang), that helps 
 implement a technique called Source Code Transformation (SCT). 
@@ -65,28 +63,35 @@ generates an output code that represents the derivative of the input. This
 output code can be used instead of the input code for more efficient 
 compilation.
 
+In case of RooFit, this is done by extending RooFit classes using a 
+`translate()` function, which can extract all the mathematical differentiable 
+properties out of all the RooFit classes that make up the statistical model.
+
 [^1]: [Clad](https://compiler-research.org/clad/) is a C++ plugin for clang that 
 implements automatic differentiation of user-defined functions by employing 
 the chain rule in forward mode, coupled with Source Code Transformation and 
 AST constant fold.
 
-### Steps to add AD support in Roofit entities
+## Steps to add AD support in RooFit classes
 
-- Locate the relevant directory
-- Review relevant classes where AD implementation logic resides:
-  - CodeSquashContext: handles how to create a C++ function out of the compute 
-  graph
-  - RooFuncWrapper: wraps the generated C++ code in a Roofit object
-- Select a Class/ Mathematical Notation to which AD support needs to be added 
-(see `RooPoisson.cxx` example below).
-- Locate and update the `evaluate()` function
-- Create a `translate()` function
-- Use Helper Functions like `EvaluateFuncs()`, `buildCall()`, `addResult()`, 
-etc. to translate existing logic into AD-supported logic. 
+1 - Locate the relevant directory
+
+2 - Review relevant classes where AD implementation logic resides:
+
+   - `CodeSquashContext`: helps create a C++ function out of the compute graph
+  
+   - `RooFuncWrapper`: helps wrap the generated C++ code in a RooFit object
+    
+3 - Add AD support to a RooFit Class: 
+  
+   - select a Class
+   - update `evaluate()`
+   - create `translate()` using Helper Functions to translate existing logic
+ into AD-supported logic. 
 
 > See appendix for a list of available Helper Functions.
 
-### Locate Relevant Directory
+### 1. Locate Relevant Directory
 
 Let us look at one of the RooFit directories. Each class name starts with a 
 "Roo" prefix (e.g., RooAddPdf). 
@@ -102,55 +107,48 @@ to form a graph, where the nodes are the variables, etc. and the edges
 represent the dependencies between them. This compute graph makes up a model 
 on which further data analysis can be executed.
 
-### AD Logic Implementation
+### 2. Review AD Logic Implementation
 
-To view the AD logic, let us look at the following classes:
+Following classes provide several Helper Functions to translate existing logic 
+into AD-supported logic.
 
-- CodeSquashContext
-- RooFuncWrapper
+a - CodeSquashContext
 
+b - RooFuncWrapper
 
-#### 1. CodeSquashContext
+#### a. CodeSquashContext
 
 > [roofit/roofitcore/inc/RooFit/Detail/CodeSquashContext.h](https://github.com/root-project/root/blob/6136be0d4514591d8ab93815be941702f5509298/roofit/roofitcore/inc/RooFit/Detail/CodeSquashContext.h)
 
-#### Overview
-
 It handles how to create a C++ function out of the compute graph (which is 
-created with different Roofit classes). This function will be independent of 
-these Roofit classes.
+created with different RooFit classes). This function will be independent of 
+these RooFit classes.
 
-The compute graph received from Roofit is traversed to create a piece of code 
+The compute graph received from RooFit is traversed to create a piece of code 
 that can be differentiated. 
 
-![Code generation for differentiation](code_generation.png "")
-
-This requires Roofit classes to be transformed to expose their differential 
-properties. A lot of book-keeping, caching, etc. that is required for Roofit 
+This requires RooFit classes to be transformed to expose their differential 
+properties. A lot of book-keeping, caching, etc. that is required for RooFit 
 (but not necessarily for AD) is then done. It also evaluates things that 
 don't need to be differentiated. 
 
-![Evaluate function](evaluate.png "")
-
 ##### `translate()` function
 
-The `translate()` function helps implement the Code Squashing logic, that is 
-used to optimize numerical evaluations. It helps convert a RooFit expression 
-into a form that can be efficiently evaluated. This can significantly speed 
-up calculations, which is especially useful for large datasets.
+A new `translate()` function is added to RooFit classes to help implement the 
+Code Squashing logic that is used to optimize numerical evaluations. Using 
+helper functions, it helps convert a RooFit expression into a form that can be 
+efficiently evaluated.
 
 It returns an `std::string` representing the underlying mathematical notation
- of the class as code that can later be concatenated into a single string 
+ of the class as code, that can later be concatenated into a single string 
 representing the entire model.
-
-![Translate function](translate.png "")
 
 For more technical details, please see the following paper:
 
-> [Automatic Differentiation of Binned Likelihoods With Roofit and Clad](https://arxiv.org/abs/2304.02650)
+> [Automatic Differentiation of Binned Likelihoods With RooFit and Clad](https://arxiv.org/abs/2304.02650)
 
 
-#### Other capabilities
+##### Helper Functions
 
 - **CodeSquashContext**: this class maintains the context for squashing of 
 RooFit models into code.  It keeps track of the results of various 
@@ -191,17 +189,17 @@ For detailed in-line documentation (code comments), please see:
 > [roofit/roofitcore/src/RooFit/Detail/CodeSquashContext.cxx](https://github.com/root-project/root/blob/a50450c2701bbef8756c20ff8deaf6a48f42205b/roofit/roofitcore/src/RooFit/Detail/CodeSquashContext.cxx)
 
 
-#### 2. RooFuncWrapper
+#### b. RooFuncWrapper
 
 > [roofit/roofitcore/inc/RooFuncWrapper.h](https://github.com/root-project/root/blob/6136be0d4514591d8ab93815be941702f5509298/roofit/roofitcore/inc/RooFuncWrapper.h)
 
-This class wraps the generated C++ code in a Roofit object, so that it can be
+This class wraps the generated C++ code in a RooFit object, so that it can be
  used like other RooFit objects.
 
 It takes a function body as input and creates a callable function from it. 
 This allows users to evaluate the function and its derivatives efficiently.
 
-##### Other Capabilities
+##### Helper Functions
 
 - **loadParamsAndData()** extracts parameters and observables from the 
 provided data and prepares them for evaluation.
@@ -226,19 +224,19 @@ For detailed in-line documentation (code comments), please see:
 > [roofit/roofitcore/src/RooFuncWrapper.cxx](https://github.com/root-project/root/blob/8d03a461ff8cf1b2ac3b20277cd962328b340e09/roofit/roofitcore/src/RooFuncWrapper.cxx)
 
 
-## Adding AD support to a Roofit Class
+### 3. Adding AD support to a RooFit Class
 
 Let us take the `RooPoisson.cxx` class as an example. 
 
 > [roofit/roofit/src/RooPoisson.cxx](https://github.com/root-project/root/blob/6136be0d4514591d8ab93815be941702f5509298/roofit/roofit/src/RooPoisson.cxx)
 
-First step is to locate the `evaluate()` function. Most Roofit classes 
+First step is to locate the `evaluate()` function. Most RooFit classes 
 implement this function.
 
-> Roofit internally calls the `evaluate()` function to evaluate a single node
+> RooFit internally calls the `evaluate()` function to evaluate a single node
  in a compute graph.
 
-### Before AD Support
+#### Before AD Support
 
 Following is a code snippet from `RooPoisson` *before* it had AD support.
 
@@ -254,11 +252,11 @@ double RooPoisson::evaluate() const
 `RooPoisson` class, create a translate function and in it include a call to 
 this `TMath::Poisson()` function.
 
-### After AD Support
+#### After AD Support
 
 Following is a code snippet from `RooPoisson` *after* it has AD support.
 
-#### Changes to `evaluate()` Function
+##### Updated `evaluate()` Function
 
 ```C++
 double RooPoisson::evaluate() const
@@ -273,7 +271,7 @@ To expose the respective function to Clad (AD plugin for Clang Compiler), it
 was moved out into another in-line function into a header file named 
 `EvaluateFuncs`, so that Clad could see and differentiate that function.
 
-#### Add the `translate()` Function
+##### Added `translate()` Function (using Helper Functions)
 
 ```C++
 void RooPoisson::translate(RooFit::Detail::CodeSquashContext &ctx) const
@@ -295,7 +293,7 @@ more complicated. For a specific class, it will add whatever is represented on
  is important to call `addResult()` since this is what enables the squashing to
  happen. 
 
-#### More `translate()` Examples
+##### More `translate()` Examples
 
 **Example 1:** Following is a code snippet from `RooGaussian.cxx` *after* it 
 has AD support.
@@ -315,7 +313,7 @@ Following helper function can be seen here.
 - `buildCall()` helps build a function call. Requires the fully qualified name
  (`RooFit::Detail::EvaluateFuncs::gaussianEvaluate`) of the function. When 
 this external `buildCall()` function is called, internally, the `getResult()` 
-function is called on the input Roofit objects (e.g., x, mean, sigma). That's 
+function is called on the input RooFit objects (e.g., x, mean, sigma). That's 
 the only way to propagate these upwards into the compute graph.
 
 **Example 2:** A more complicated example of a `translate()` function can be 
@@ -348,7 +346,7 @@ void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
 Helper functions from the above example:
 
 - `makeValidVarName()` helps get a valid name from the name of the respective 
-Roofit class. It then helps save it to the variable that represents the result
+RooFit class. It then helps save it to the variable that represents the result
  of this class (the squashed code/ C++ function that will be created). 
 
 - `addToGlobalScope()` helps declare and initialize the results variable, so 
@@ -361,7 +359,7 @@ class. Simply place this function in the scope and place the contents of the
 For loop below this statement. The code squashing task will automatically 
 build a loop around the statements that follow it. There's no need to worry 
 about the index of these loops, because they get propagated. For example, if 
-you want to iterate over a vector of Roofit objects using a loop, you don't 
+you want to iterate over a vector of RooFit objects using a loop, you don't 
 have to think about indexing them properly because the `beginLoop()` function 
 takes care of that. Simply call this function, place your function call in a 
 scope and after the scope ends, the loop will also end.
@@ -404,7 +402,7 @@ code body of the squashed function.
 For loop below this statement. The code squashing task will automatically 
 build a loop around the statements that follow it. There's no need to worry 
 about the index of these loops, because they get propagated. For example, if 
-you want to iterate over a vector of Roofit objects using a loop, you don't 
+you want to iterate over a vector of RooFit objects using a loop, you don't 
 have to think about indexing them properly because the `beginLoop()` function 
 takes care of that. Simply call this function, place your function call in a 
 scope and after the scope ends, the loop will also end.
@@ -414,7 +412,7 @@ representations for efficient computation.
 
 - **buildCall()**: Helps build a function call. Requires the fully qualified 
 name of the function. When this external `buildCall()` function is called, 
-internally, the `getResult()` function is called on the input Roofit objects 
+internally, the `getResult()` function is called on the input RooFit objects 
 (e.g., x, mean, sigma). That's the only way to propagate these upwards into 
 the compute graph.
 
@@ -430,8 +428,8 @@ debugging).
 - **dumpGradient()**: prints the derivative code body to console (useful for 
 debugging).
 
-- **evaluate()**: All Roofit classes implement this function. It performs a 
-lot of book-keeping, caching, etc. that is required for Roofit (but not 
+- **evaluate()**: All RooFit classes implement this function. It performs a 
+lot of book-keeping, caching, etc. that is required for RooFit (but not 
 necessarily for AD). 
 
 - **getResult()**: It helps lookup the result of a child node (the string that
@@ -445,11 +443,11 @@ function).
 provided data and prepares them for evaluation. 
 
 - **makeValidVarName()**: It helps get a valid name from the name of the 
-respective Roofit class. It then helps save it to the variable that represents
+respective RooFit class. It then helps save it to the variable that represents
  the result of this class (the squashed code/ C++ function that will be 
 created). 
 
-- **translate()**: All Roofit classes that should support AD need to use this 
+- **translate()**: All RooFit classes that should support AD need to use this 
 function. It creates a string of code, which is then just-in-time compiled 
 using Cling (C++ interpreter for ROOT). For each of the `translate()` 
 functions, it is important to call `addResult()` since this is what enables 
