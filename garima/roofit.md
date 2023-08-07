@@ -185,7 +185,8 @@ This node also performs the necessary code generation through recursive calls
 - **assembleCode()**: combines the generated code statements into the final 
 code body of the squashed function.
 
-For detailed in-line documentation (code comments), please see:
+These functions will appear again in this document with more contextual 
+examples. For detailed in-line documentation (code comments), please see:
 
 > [roofit/roofitcore/src/RooFit/Detail/CodeSquashContext.cxx](https://github.com/root-project/root/blob/a50450c2701bbef8756c20ff8deaf6a48f42205b/roofit/roofitcore/src/RooFit/Detail/CodeSquashContext.cxx)
 
@@ -220,7 +221,8 @@ debugging).
 - **dumpGradient()**: prints the derivative code body to console (useful for 
 debugging).
 
-For detailed in-line documentation (code comments), please see:
+These functions will appear again in this document with more contextual 
+examples. For detailed in-line documentation (code comments), please see:
 
 > [roofit/roofitcore/src/RooFuncWrapper.cxx](https://github.com/root-project/root/blob/8d03a461ff8cf1b2ac3b20277cd962328b340e09/roofit/roofitcore/src/RooFuncWrapper.cxx)
 
