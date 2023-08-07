@@ -89,9 +89,9 @@ For more technical details, please see the following paper:
 3 - Add AD support to a RooFit Class: 
   
    - select a Class
-   - update `evaluate()`
    - create `translate()` using Helper Functions to translate existing logic
  into AD-supported logic. 
+   - update `evaluate()` to expose it to Clad
 
 > See appendix for a list of available Helper Functions.
 
@@ -259,21 +259,6 @@ this `TMath::Poisson()` function.
 
 Following is a code snippet from `RooPoisson` *after* it has AD support.
 
-##### Updated `evaluate()` Function
-
-```C++
-double RooPoisson::evaluate() const
-{
-  ...
-  }
-  return RooFit::Detail::EvaluateFuncs::poissonEvaluate(k, mean);
-}
-```
-
-To expose the respective function to Clad (AD plugin for Clang Compiler), it 
-was moved out into another in-line function into a header file named 
-`EvaluateFuncs`, so that Clad could see and differentiate that function.
-
 ##### Added `translate()` Function (using Helper Functions)
 
 ```C++
@@ -295,6 +280,21 @@ more complicated. For a specific class, it will add whatever is represented on
  in the rest of the compute graph. For each of the `translate()` functions, it
  is important to call `addResult()` since this is what enables the squashing to
  happen. 
+
+##### Updated `evaluate()` Function
+
+```C++
+double RooPoisson::evaluate() const
+{
+  ...
+  }
+  return RooFit::Detail::EvaluateFuncs::poissonEvaluate(k, mean);
+}
+```
+
+To expose the respective function to Clad (AD plugin for Clang Compiler), it 
+was moved out into another in-line function into a header file named 
+`EvaluateFuncs`, so that Clad could see and differentiate that function.
 
 ##### More `translate()` Examples
 
