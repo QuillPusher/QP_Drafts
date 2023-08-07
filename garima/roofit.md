@@ -53,10 +53,14 @@ experimental data.
 errors and making the code easier to maintain and debug.
 
 
-### AD using Source Code Transformation
+### AD using Source Code Transformation in Clad
 
-AD can be accomplished using Clad [^1] (a C++ plugin for Clang), that helps 
+AD can be accomplished using Clad (a C++ plugin for Clang), that helps 
 implement a technique called Source Code Transformation (SCT). 
+
+> [Clad](https://compiler-research.org/clad/) is a source transformation AD 
+tool implemented as a plugin to the clang compiler, which automatically 
+generates the derivative code for input C++ functions. 
 
 SCT takes the source code (that needs to be differentiated) as the input and 
 generates an output code that represents the derivative of the input. This 
@@ -67,10 +71,10 @@ In case of RooFit, this is done by extending RooFit classes using a
 `translate()` function, which can extract all the mathematical differentiable 
 properties out of all the RooFit classes that make up the statistical model.
 
-[^1]: [Clad](https://compiler-research.org/clad/) is a C++ plugin for clang that 
-implements automatic differentiation of user-defined functions by employing 
-the chain rule in forward mode, coupled with Source Code Transformation and 
-AST constant fold.
+For more technical details, please see the following paper:
+
+> [Automatic Differentiation of Binned Likelihoods With RooFit and Clad](https://arxiv.org/abs/2304.02650)
+
 
 ## Steps to add AD support in RooFit classes
 
@@ -124,29 +128,26 @@ It handles how to create a C++ function out of the compute graph (which is
 created with different RooFit classes). This function will be independent of 
 these RooFit classes.
 
-The compute graph received from RooFit is traversed to create a piece of code 
-that can be differentiated. 
+It helps traverse the compute graph received from RooFit and then it 
+translates that into a single piece of code (a C++ function), that can then be 
+differentiated using Clad. It also helps evaluate the model.
 
-This requires RooFit classes to be transformed to expose their differential 
-properties. A lot of book-keeping, caching, etc. that is required for RooFit 
-(but not necessarily for AD) is then done. It also evaluates things that 
-don't need to be differentiated. 
+In RooFit, evalaution is done using the 'evaluate()' function. It also 
+performs a lot of book-keeping, caching, etc. that is required for RooFit (but 
+not necessarily for AD). 
 
 ##### `translate()` function
 
-A new `translate()` function is added to RooFit classes to help implement the 
-Code Squashing logic that is used to optimize numerical evaluations. Using 
-helper functions, it helps convert a RooFit expression into a form that can be 
-efficiently evaluated.
+A new `translate()` function is added to RooFit classes that includes a call 
+to the `evaluate()` function (that most RooFit classes already include). It 
+helps implement the Code Squashing logic that is used to optimize numerical 
+evaluations. Using helper functions, it helps convert a RooFit expression into 
+a form that can be efficiently evaluated.
 
 It returns an `std::string` representing the underlying mathematical notation
  of the class as code, that can later be concatenated into a single string 
-representing the entire model.
-
-For more technical details, please see the following paper:
-
-> [Automatic Differentiation of Binned Likelihoods With RooFit and Clad](https://arxiv.org/abs/2304.02650)
-
+representing the entire model. This string of code is then just-in-time 
+compiled by Cling (a C++ interpreter for Root).
 
 ##### Helper Functions
 
