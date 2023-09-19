@@ -208,8 +208,8 @@ more complicated. For a specific class, it will add whatever is represented on
 this is what enables the squashing to happen. 
 
 
-**translate() Example 2:** Following is a code snippet from `RooGaussian.cxx` *after* it 
-has AD support.
+**translate() Example 2:** Following is a code snippet from `RooGaussian.cxx` 
+*after* it has AD support.
 
 ```C++
 void RooGaussian::translate(RooFit::Detail::CodeSquashContext &ctx) const
@@ -232,8 +232,8 @@ this external `buildCall()` function is called, internally, the `getResult()`
 function is called on the input RooFit objects (e.g., x, mean, sigma). That's 
 the only way to propagate these upwards into the compute graph.
 
-**translate() Example 3:** A more complicated example of a `translate()` function can be 
-seen here: 
+**translate() Example 3:** A more complicated example of a `translate()` 
+function can be seen here: 
 
 ```C++
 void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
@@ -261,6 +261,12 @@ void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
 ```
 
 > Source: - [RooNLLVarNew](https://github.com/root-project/root/blob/6136be0d4514591d8ab93815be941702f5509298/roofit/roofitcore/src/RooNLLVarNew.cxx#L298)
+
+The complexity of the `translate()` function in this example can be attributed
+ to the more complex scenarios/operations specific to the computation of 
+negative log-likelihood (NLL) values for probability density functions (PDFs) 
+in RooFit, especially for simultaneous fits (multiple simultaneous PDFs being 
+considered) and binned likelihoods (adding further complexity). 
 
 In this example, the `translate()` function generates code to compute the 
 Negative Log likelihood (NLL). We can see that the intermediate result 
@@ -711,84 +717,113 @@ debugging).
 These functions will appear again in this document with more contextual 
 examples. For detailed in-line documentation (code comments), please see:
 
-> [roofit/roofitcore/src/RooFuncWrapper.cxx](https://github.com/root-project/root/blob/8d03a461ff8cf1b2ac3b20277cd962328b340e09/roofit/roofitcore/src/RooFuncWrapper.cxx)
+> [roofit/roofitcore/src/RooFuncWrapp9er.cxx](https://github.com/root-project/root/blob/8d03a461ff8cf1b2ac3b20277cd962328b340e09/roofit/roofitcore/src/RooFuncWrapper.cxx)
 
 
 ## Appendix C - Helper functions discussed in this document
 
-- **addResult()**: It may include a function call, an expression, or something
- more complicated. For a specific class, it will add whatever is represented 
-on the right hand side to the result of this class, which can then be 
-propagated in the rest of the compute graph. For each of the `translate()` 
-functions, it is important to call `addResult()` since this is what enables 
-the squashing to happen.
+- **CodeSquashContext::addResult()**: For a specific class, it will add 
+whatever is represented on the right-hand side (a function call, an 
+expression, etc.) to the result of this class, which can then be propagated in
+ the rest of the compute graph. A to call `addResult()`must be included in 
+`translate()` function.
 
-- **addToCodeBody()**: It helps add things to the body of the C++ function 
-that you're creating. It takes whatever string is computed in its arguments 
-and adds it to the overall function string (which will later be just-in-time 
-compiled). The `addToCodeBody()` function is important since not everything 
-can be added in-line and this function helps split the code into multiple 
-lines.
+  - Inputs: `key` (the name of the node to add the result for), `value` (the 
+new name to assign/overwrite).
+  - Output: Adds (or overwrites) the string representing the result of a node.
 
-- **addToGlobalScope()**: It helps declare and initialize the results 
-variable, so that it can be available globally (throughout the function body).
- For local variables, the `addToCodeBody()` function can be used to keep the 
-variables in the respective scope (for example, within a loop).
+- **CodeSquashContext::getResult()**: It helps lookup the result of a child 
+node (the string that the child node previously saved in a variable using the 
+`addResult()` function).
 
-- **assembleCode()**: combines the generated code statements into the final 
-code body of the squashed function.
+  - Input: `key` (the node to get the result string for).
+  - Output: String representing the result of this node.
 
-- **beginLoop()**: It helps build the start and the end of a For loop for your
- class. Simply place this function in the scope and place the contents of the 
-For loop below this statement. The code squashing task will automatically 
-build a loop around the statements that follow it.
+- **CodeSquashContext::addToCodeBody()**: Takes whatever string is computed in
+ its arguments and adds it to the overall function string (which will later be
+ just-in-time compiled).
 
-- **buildArg()**: helps convert RooFit objects into arrays or other C++ 
-representations for efficient computation.
+  - Inputs: `klass` (the class requesting this addition, usually 'this'), `in`
+ (string to add to the squashed code).
+  - Output: Adds the input string to the squashed code body.
 
-- **buildCall()**: Helps build a function call. Requires the fully qualified 
-name of the function. When this external `buildCall()` function is called, 
-internally, the `getResult()` function is called on the input RooFit objects 
-(e.g., x, mean, sigma). That's the only way to propagate these upwards into 
-the compute graph.
+- **CodeSquashContext::addToGlobalScope()**: Helps declare and initialize the 
+results variable, so that it can be available globally (throughout the 
+function body).
 
-- **buildCode()**: generates the optimized code for evaluating the function 
-and its derivatives. 
+  - Input: `str` (the string to add to the global scope).
+  - Output: Adds the given string to the string block that will be emitted at 
+the top of the squashed function.
 
-- **declareAndDiffFunction()**: declare the function and create its 
-derivative.
+- **CodeSquashContext::assembleCode()**: combines the generated code 
+statements into the final code body of the squashed function.
 
-- **dumpCode()**: prints the squashed code body to console(useful for 
-debugging).
+  - Input: `returnExpr` (he string representation of what the squashed 
+function should return, usually the head node).
+  - Output: The final body of the function.
 
-- **dumpGradient()**: prints the derivative code body to console (useful for 
-debugging).
+- **CodeSquashContext::beginLoop()**: The code squashing task will 
+automatically build a For loop around the indented statements that follow this
+ function.
 
-- **evaluate()**: All RooFit classes implement this function. It performs a 
-lot of book-keeping, caching, etc. that is required for RooFit (but not 
-necessarily for AD). 
+  - Input: `in` (a pointer to the calling class, used to determine the loop 
+dependent variables).
+  - Output: A scope for iterating over vector observables.
 
-- **getResult()**: It helps lookup the result of a child node (the string that
- the child node previously saved in a variable using the `addResult()` 
-function). 
+- **CodeSquashContext::buildArg()**: helps convert RooFit objects into arrays 
+or other C++ representations for efficient computation.
 
-- **gradient()**: calculates the gradient of the function with respect to its
- parameters.
+  - Input: `in` (the list to convert to array).
+  - Output: Name of the array that stores the input list in the squashed code.
 
-- **loadParamsAndData()** extracts parameters and observables from the 
-provided data and prepares them for evaluation. 
+- **CodeSquashContext::buildCall()**: Creates a string representation of the 
+function to be called and its arguments.
 
-- **makeValidVarName()**: It helps get a valid name from the name of the 
-respective RooFit class. It then helps save it to the variable that represents
- the result of this class (the squashed code/ C++ function that will be 
-created). 
+  - Input: A function with name `funcname`, passing some arguments.
+  - Output: A string representation of the function to be called.
 
-- **translate()**: All RooFit classes that should support AD need to use this 
-function. It creates a string of code, which is then just-in-time compiled 
-using Cling (C++ interpreter for ROOT). For each of the `translate()` 
-functions, it is important to call `addResult()` since this is what enables 
-the squashing to happen.
+- **CodeSquashContext::makeValidVarName()**: It helps fetch and save a valid 
+name from the name of the respective RooFit class. 
 
+  - Input: `in` (the input string).
+  - Output: A new string that is a vaild variable name.
+
+- **RooFuncWrapper::buildCode()**: Generates the optimized code for evaluating
+ the function and its derivatives. 
+
+  - Input: `head` (starting mathematical expression).
+  - Output: code for evaluating the function.
+
+- **RooFuncWrapper::declareAndDiffFunction()**: Declare the function and 
+create its derivative.
+
+  - Inputs: `funcName` (name of the function being differentiated), `funcBody`
+ (actual mathematical formula or equation).
+  - Output: Function declaration and its derivative.
+
+- **RooFuncWrapper::dumpCode()**: Prints the squashed code body to 
+console(useful for debugging).
+
+  - Output: Print squashed code body to console
+
+- **RooFuncWrapper::dumpGradient()**: Prints the derivative code body to 
+console (useful for debugging).
+
+  - Output: Print derivative code body to console.
+
+- **RooFuncWrapper::gradient()**: Calculates the gradient of the function with
+ respect to its parameters.
+
+  - Input: `out` (array where the computed gradient values will be stored).
+  - Output: Populates the `out` array with gradient values.
+
+- **RooFuncWrapper::loadParamsAndData()** Extracts parameters and observables 
+from the provided data and prepares them for evaluation. 
+
+  - Input: `funcName` (function name), `head` (structure of the function), 
+`paramSet` (input function's parameters), `data` (optional data points).
+  - Output: Parameters, observables and other related information (e.g., 
+output size of the provided function).
 
 
 
