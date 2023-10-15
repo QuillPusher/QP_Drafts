@@ -12,7 +12,7 @@ PyRoot component in the ROOT Framework, that was developed in the early
 2000s, and after the introduction of Cling interpreter, it evolved into
 cppyy.
 
-## Recent interoperablilty Enhancements
+## Recent Interoperability Enhancements
 
 ### Reducing Dependencies
 
@@ -24,7 +24,7 @@ discovered beyond that as well).
 Only a small set of APIs are needed to connect to the interpreter, since
 other APIs are already available in the standard compiler. This is what
 led to the creation of LibInterOp (a library of helper functions), that
-helped extact out things that were unnecessary for cppyy, etc.
+helped extract out things that were unnecessary for cppyy, etc.
 
 The API surface is now incomparably smaller and simpler than what it
 used to be.
@@ -36,7 +36,7 @@ interoperable with C++ (using LibInterOp). This helps a lot of data
 scientists that are working with legacy C++ code and would like to
 migrate to simpler, more interactive languages.
 
-The goal is to eventually land these interoperablilty tools (including
+The goal is to eventually land these interoperability tools (including
 LibInterOp) to greater communities like LLVM and Clang, to enable C++ to
 interact with other languages besides Python.
 
@@ -76,7 +76,7 @@ These changes help ensure that any change in `cppyy` doesn't directly affect
 Python objects for C++ entities. `CPyCppyy` uses separate proxy classes for each
 type of object. It also includes helper classes, for example, `Converters.cxx`
 helps convert Python type objects to C++ type objects, while `Executors.cxx` is
-used to execuate a function and convert its return value to a Python object, so
+used to execute a function and convert its return value to a Python object, so
 that it can be used inside Python.
 
 ### cppyy

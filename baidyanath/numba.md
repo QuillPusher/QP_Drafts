@@ -68,15 +68,15 @@ cppyy within Python, while also benefitting with the conversion to LLVM IR that
 Numba can provide for specific functions.
 
 This is challenging since three entities (C++, cppyy, and Numba) that
-communicate differently need to work together, leading to a a more strict set
-of restrictions.
+communicate differently need to work together, leading to a stricter set of
+restrictions.
 
 For now, Numba supports primitive types and some class types in C++, but support
 for other core C++ features (e.g., reference types) is still in the works.
 
 ### Long Term Outlook
 
-Working with cppyy, Numba can look into C++ code. This enables a whole new
+Working with cppyy, Numba also work with C++ code. This enables a whole new
 understanding of how two languages can work together. If an optimizer can see
 the same representation coming from both, Numba and C++, it can optimize it a
 lot better.
