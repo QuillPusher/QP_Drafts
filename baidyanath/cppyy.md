@@ -114,19 +114,20 @@ it calls the relevant backend functions required to initialize cppyy.
 
 ## Further Reading
 
-Details and performance are described in [this paper], originally presented at
-PyHPC'16, but since updated with improved performance numbers. A more 
-[recent paper] was presented in April 2023 focuses on efficiency and accuracy
-improvement.
+- [High-performance Python-C++ bindings with PyPy and Cling]
 
-cppyy documentation: [cppyy.readthedocs.io](http://cppyy.readthedocs.io/).
+- [Efficient and Accurate Automatic Python Bindings with cppyy & Cling] 
 
-Notebook-based tutorial: [Cppyy Tutorial](https://github.com/wlav/cppyy/blob/master/doc/tutorial/CppyyTutorial.ipynb).
+- cppyy documentation: [cppyy.readthedocs.io].
+
+- Notebook-based tutorial: [Cppyy Tutorial].
 
 
-[this paper]: http://cern.ch/wlav/Cppyy_LavrijsenDutta_PyHPC16.pdf
+[High-performance Python-C++ bindings with PyPy and Cling]: http://cern.ch/wlav/Cppyy_LavrijsenDutta_PyHPC16.pdf
 
-[recent paper]: https://arxiv.org/abs/2304.02712
+[Efficient and Accurate Automatic Python Bindings with cppyy & Cling]: https://arxiv.org/abs/2304.02712
+
+[Cppyy Tutorial]: https://github.com/wlav/cppyy/blob/master/doc/tutorial/CppyyTutorial.ipynb
 
 [wlav]: https://github.com/wlav
 
@@ -137,3 +138,5 @@ Notebook-based tutorial: [Cppyy Tutorial](https://github.com/wlav/cppyy/blob/mas
 [utilities]: https://cppyy.readthedocs.io/en/latest/utilities.html
 
 [included]: https://cppyy.readthedocs.io/en/latest/starting.html
+
+[cppyy.readthedocs.io]: http://cppyy.readthedocs.io/
