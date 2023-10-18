@@ -1,11 +1,35 @@
-## cppyy: Python-C++ bindings interface based on Cling/LLVM
+## cppyy Introduction
 
-cppyy provides fully automatic, dynamic Python-C++ bindings by
-leveraging the Cling C++ interpreter and LLVM. It supports both PyPy
-(natively), CPython, and C++ language standards through C++17 (and parts
-of C++20).
+cppyy provides fully automatic, dynamic Python-C++ bindings by leveraging the
+Cling C++ interpreter and LLVM. It differs from other Python-C++ binders since
+it creates bindings at runtime (using Cling interpreter for C++ side runtime),
+which is a lot more natural for Python, where most actions are performed at
+runtime. 
 
-## Background
+### Advantages of C++ runtime behavior(using Cling):
+
+- Runtime Template Instantiations (no pre-compilation, no duplication of
+   standard classes, and most uniquely, support for templates of user classes). 
+
+- Runtime Cross-Inheritance (add features at runtime , for example, Cling's JIT
+  compiles generated trampolines).
+
+> Cross-inheritance allows (uniquely identifiable & memory managed) Python
+> classes in C++. C++ classes can be used as template arguments (emergent
+> property: python classes in templates).
+
+- Runtime Callbacks (Cling's JIT compiles type-checked and memory managed,
+  generated wrappers, supports C++ function pointers and `std::function`).
+
+- Python can pass any callable (functions, lambdas, bound C++ functions, methods
+  (without wrappers), etc.).
+
+- Runtime Exceptions (maps exceptions derived from `std:exceptions` and
+  preserves C++ exception types).
+
+- etcetera (visit [cppyy.readthedocs.io] for more technical details).
+
+### cppyy Origin
 
 Early Python enthusiasts may recognize cppyy as a successor to the
 PyRoot component in the ROOT Framework, that was developed in the early
