@@ -1,4 +1,4 @@
-## cppyy Introduction
+## Introduction
 
 cppyy provides fully automatic, dynamic Python-C++ bindings by leveraging the
 Cling C++ interpreter and LLVM. It differs from other Python-C++ binders since
@@ -6,52 +6,38 @@ it creates bindings at runtime (using Cling interpreter for C++ side runtime),
 which is a lot more natural for Python, where most actions are performed at
 runtime. 
 
-### Advantages of C++ runtime behavior(using Cling):
+## Latest enhancements in cppyy from Compiler Research Org's contributors
 
-- Runtime Template Instantiations (no pre-compilation, no duplication of
-   standard classes, and most uniquely, support for templates of user classes). 
+- Reducing dependencies of cppyy to minimize code bloat and make it faster.
 
-- Runtime Cross-Inheritance (add features at runtime , for example, Cling's JIT
-  compiles generated trampolines).
-
-> Cross-inheritance allows (uniquely identifiable & memory managed) Python
-> classes in C++. C++ classes can be used as template arguments (emergent
-> property: python classes in templates).
-
-- Runtime Callbacks (Cling's JIT compiles type-checked and memory managed,
-  generated wrappers, supports C++ function pointers and `std::function`).
-
-- Python can pass any callable (functions, lambdas, bound C++ functions, methods
-  (without wrappers), etc.).
-
-- Runtime Exceptions (maps exceptions derived from `std:exceptions` and
-  preserves C++ exception types).
-
-- etcetera (visit [cppyy.readthedocs.io] for more technical details).
-
-### cppyy Origin
-
-Early Python enthusiasts may recognize cppyy as a successor to the
-PyRoot component in the ROOT Framework, that was developed in the early
-2000s, and after the introduction of Cling interpreter, it evolved into
-cppyy.
-
-## Recent Interoperability Enhancements
+- Creating a cppyy-style CppInterOp library that enables interoperability with
+  C++ code, bringing the speed and efficiency of C++ to simpler, more
+  interactive languages like Python.
 
 ### Reducing Dependencies
 
-Recent work done on cppyy has been focused on removing unnecessary
-dependencies on domain-specific infrastructure (since initial research
-was done for the High Energy Physics (HEP) field, but its usefulness was
-discovered beyond that as well).
+Recent work done on cppyy has been focused on removing unnecessary dependencies
+on domain-specific infrastructure (e.g., the ROOT framework). The idea was to
+convert the cppyy-backend to use Cling directly (instead of ROOT meta), and
+then use it in cppyy.
 
 Only a small set of APIs are needed to connect to the interpreter, since
 other APIs are already available in the standard compiler. This is what
-led to the creation of LibInterOp (a library of helper functions), that
+led to the creation of CppInterOp (a library of helper functions), that
 helped extract out things that were unnecessary for cppyy, etc.
 
 The API surface is now incomparably smaller and simpler than what it
 used to be.
+
+### CppInterOp library
+
+CppInterOp can be adopted incrementally. While the rest of the framework is the
+same, a small part of CppInterOp can be utilized. More components may be
+adopted over time.
+
+It is designed to be simple and robust (simple function calls, no inheritance,
+etc.). The goal is to make it as close to the compiler API as possible, and
+each routine to do just one thing that it was designed for.
 
 ## Making C++ More Social
 
@@ -60,9 +46,42 @@ interoperable with C++ (using LibInterOp). This helps a lot of data
 scientists that are working with legacy C++ code and would like to
 migrate to simpler, more interactive languages.
 
-The goal is to eventually land these interoperability tools (including
-LibInterOp) to greater communities like LLVM and Clang, to enable C++ to
-interact with other languages besides Python.
+The goal of this research is to eventually land these interoperability tools
+(including CppInterOp) to greater communities like LLVM and Clang, to enable
+C++ to interact with other languages besides Python.
+
+## Example: Template Instantiation
+
+The developmental Cppyy version can run basic examples such as the one here.
+Features such as standalone functions and basic classes are also supported.
+
+C++ code (Tmpl.h)
+
+```
+template <typename T>
+struct Tmpl {
+  T m_num;
+  T add (T n) {
+    return m_num + n;
+}
+};
+```
+
+Python Interpreter
+
+```
+>>> import cppyy
+>>> import cppyy.gbl as Cpp
+>>> cppyy.include("Tmpl.h")
+>>> tmpl = Tmpl[int]()
+>>> tmpl.m_num = 4
+>>> print(tmpl.add(5))
+9
+>>> tmpl = Tmpl[float]()
+>>> tmpl.m_num = 3.0
+>>> print(tmpl.add(4.0))
+7.0
+```
 
 ## Where does the cppyy code reside?
 
@@ -78,7 +97,9 @@ Organization's customizations started by [sudo-panda]) resides:
 CppInterOp is an additional library used with Cling/Clang interpreters that
 helps these packages communicate with C++ code.
 
-- [CppInterOp](https://github.com/compiler-research/CppInterOp)
+- [CppInterOp]
+
+## How cppyy components interact with each other
 
 ### cppyy-backend
 
@@ -122,6 +143,28 @@ it calls the relevant backend functions required to initialize cppyy.
 
 - Notebook-based tutorial: [Cppyy Tutorial].
 
+- [C++ Language Interoperability Layer]
+
+## Credits:
+
+- [Baidyanath Kundu] (Princeton University) for his research work on cppyy and
+  Numba for [Compiler Research Organization].
+
+- [Vassil Vasilev] (Princeton University) for mentoring Baidyanath and
+  continuing this research with [Aaron Jomy].
+
+- [Wim Lavrijsen] (Lawrence Berkeley National Lab) cppyy's original contributor.
+
+
+[Vassil Vasilev]: https://github.com/vgvassilev
+
+[Aaron Jomy]: https://github.com/maximusron
+
+[Baidyanath Kundu]: https://github.com/sudo-panda
+
+[Wim Lavrijsen]: https://github.com/wlav
+
+[Compiler Research Organization]: https://compiler-research.org/
 
 [High-performance Python-C++ bindings with PyPy and Cling]: http://cern.ch/wlav/Cppyy_LavrijsenDutta_PyHPC16.pdf
 
@@ -140,3 +183,7 @@ it calls the relevant backend functions required to initialize cppyy.
 [included]: https://cppyy.readthedocs.io/en/latest/starting.html
 
 [cppyy.readthedocs.io]: http://cppyy.readthedocs.io/
+
+[CppInterOp]: https://github.com/compiler-research/CppInterOp/tree/main
+
+[C++ Language Interoperability Layer]: https://compiler-research.org/libinterop/
