@@ -1,4 +1,9 @@
+## Introduction
 
+Numba is a JIT compiler for (a subset of) Python functions that can be
+statically typed based on their input arguments. It essentially solves the
+problem of slow inner loops, since data is often dealt with within loops,
+creating performance bottlenecks.
 
 ## Latest enhancements in Numba from Compiler Research Org's contributors
 
@@ -56,34 +61,30 @@ possible.
 - Easier transitioning from one language to the other : You can switch easily
   between C++ and Python as and when you want.
 
-`Usage`
--------
+### Features of Numba Extension
 
-``cppyy`` exposes extension hooks that automatically make it available to
-Numba.
-If, however, you do not use ``setuptools`` (through ``pip`` or otherwise),
-you can load the extensions explicitly::
+- **Plug and Play**: To use the extension you just need to import
+  cppyy.numba_ext and then you can use C++ functions in Numba directly. In the
+  example shown below sqrt is a C++ function that can be used directly inside
+  the Numba JIT-ed function with the help of the extension.
 
-    >>> import cppyy.numba_ext
-    >>> 
+  ```
+  import numba
+  import cppyy
+  import cppyy.numba_ext # <------- Imports the necessary information for numba to work with cppyy
+  import math
+  @numba.jit(nopython=True)
+  def cpp_sqrt(x):
+   return cppyy.gbl.sqrt(x) # <------------ Direct use, no extra setup required
+  print("Sqrt of 4: ", cpp_sqrt(4.0))
+  print("Sqrt of Pi: ", cpp_sqrt(math.pi))
+  ```
+  
+  Output:
 
-After that, Numba is able to trace ``cppyy`` bound code.
-Note that the ``numba_ext`` module will register only the proxy base classes,
-to keep overheads to a minimum.
-The pre-registered base classes will, lazily and automatically, register
-further type information for the concrete classes and overloads on actual
-use in Numba traces, not from other uses.
+  Sqrt of 4: 2.0
 
-### Examples of Numba Extension Features
-
-The following, non-exhaustive, set of examples gives an idea of the current
-level of support. The overall goal, however, is to be able to use cppyy bound
-code in Numba traces in the same as it can be used in normal Python code.
-
-C++ free (global) functions can be called and overloads will be selected, or a
-template will be instantiated, based on the provided types, assuming all types
-match explicitly (thus e.g. typedefs, implicit conversions, and default
-arguments are not yet supported). 
+  Sqrt of Pi: 1.7724538509055159
 
 - **Template instantiation**:Cppyy supports template instantiation which gives
   you access to an important feature set in C++ that is used abundantly in lot
@@ -129,30 +130,6 @@ arguments are not yet supported).
    Sum of squares: 285
 
 
-- **Plug and Play**: To use the extension you just need to import
-  cppyy.numba_ext and then you can use C++ functions in Numba directly. In the
-  example shown below sqrt is a C++ function that can be used directly inside
-  the Numba JIT-ed function with the help of the extension.
-
-  ```
-  import numba
-  import cppyy
-  import cppyy.numba_ext # <------- Imports the necessary information for numba to work with cppyy
-  import math
-  @numba.jit(nopython=True)
-  def cpp_sqrt(x):
-   return cppyy.gbl.sqrt(x) # <------------ Direct use, no extra setup required
-  print("Sqrt of 4: ", cpp_sqrt(4.0))
-  print("Sqrt of Pi: ", cpp_sqrt(math.pi))
-  ```
-  
-  Output:
-
-  Sqrt of 4: 2.0
-
-  Sqrt of Pi: 1.7724538509055159
-
-
 - **Overload selection**: Similar to template instantiation the extension helps
   select the appropriate overload based on the type of the input provided to
   the function.
@@ -188,71 +165,9 @@ arguments are not yet supported).
   
    Overload selection output: 90
 
-Instances of C++ classes can be passed into Numba traces. They can be returned
-from functions called _within_ the trace, but can not yet be returned _from_
-the trace. Their public data is accessible (read-only) if of builtin type and
-their public methods can be called, for which overload selection works.
-Example:
-
-  .. code-block:: python
-
-    >>> import cppyy
-    >>> import numba
-    >>> import numpy as np
-    >>> 
-    >>> cppyy.cppdef("""\
-    ... class MyData {
-    ... public:
-    ...     MyData(int i, int j) : fField1(i), fField2(j) {}
-    ...
-    ... public:
-    ...     int get_field1() { return fField1; }
-    ...     int get_field2() { return fField2; }
-    ...
-    ...     MyData copy() { return *this; }
-    ...
-    ... public:
-    ...     int fField1;
-    ...     int fField2;
-    ... };""")
-    True
-    >>> @numba.jit(nopython=True)
-    >>> def tsdf(a, d):
-    ...     total = type(a[0])(0)
-    ...     for i in range(len(a)):
-    ...         total += a[i] + d.fField1 + d.fField2
-    ...     return total
-    ...
-    >>> d = cppyy.gbl.MyData(5, 6)
-    >>> a = np.array(range(10), dtype=np.int32)
-    >>> print(tsdf(a, d))
-    155
-    >>> # example of method calls
-    >>> @numba.jit(nopython=True)
-    >>> def tsdm(a, d):
-    ...     total = type(a[0])(0)
-    ...     for i in range(len(a)):
-    ...         total += a[i] +  d.get_field1() + d.get_field2()
-    ...     return total
-    ...
-    >>> print(tsdm(a, d))
-    155
-    >>> # example of object return by-value
-    >>> @numba.jit(nopython=True)
-    >>> def tsdcm(a, d):
-    ...     total = type(a[0])(0)
-    ...     for i in range(len(a)):
-    ...         total += a[i] + d.copy().fField1 + d.get_field2()
-    ...     return total
-    ...
-    >>> print(tsdcm(a, d))
-    155
-    >>>
-
-
 ### Demos
 
-#### Demo 1. Numba physics example
+#### 1. Numba physics example
 
 Taken from: [numba_scalar_impl.py]
 
@@ -304,7 +219,7 @@ Output:
 
 Total lennard jones potential = -0.5780277345740283
 
-#### Demo 2. Using the extension with PyROOT
+#### 2. Using the extension with PyROOT
 
 To use the extension with PyROOT, just as we do with Cppyy, we need to import
 `cppyy.numba_ext`. In the example we use the TLorentzVector class from ROOT. It
@@ -417,7 +332,7 @@ Output:
 
 > All values for pT match
 
-#### Demo 3. RDF
+#### 3. RDF
 
 You can also use it inside RDF through `ROOT.Numba.Declare`. Underneath is a
 simple example where it is used to calculate the power function.
